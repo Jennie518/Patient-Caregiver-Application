@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Patient Client</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Generate or get a unique identifier
+    function getOrCreateUserId() {
+      let userId = localStorage.getItem('userId');
+      if (!userId) {
+        userId = 'user-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+        localStorage.setItem('userId', userId);
+      }
+      return userId;
+    }
+  </script>
+</head>
+<body>
+  <h1>Patient Client</h1>
+  <img id="avatar" src="" alt="Avatar">
+  <p id="caption"></p>
+  <ul id="messagesList"></ul>
+  <script>
+    const socket = io();
+    const userId = getOrCreateUserId();
+
+    socket.on('connect', () => {
+      // Register as patient
+      socket.emit('register', 'user', { userId });
+    });
+
+    socket.on('init', (data) => {
+      console.log('Initial data:', data);  // Log initial data
+      if (data.avatar) {
+        document.getElementById('avatar').src = `/${data.avatar}`;
+      }
+      document.getElementById('caption').innerText = data.caption;
+    });
+
+    socket.on('go', () => {
+      window.location.href = '/nextPage.html';
+    });
+  </script>
+</body>
+</html>

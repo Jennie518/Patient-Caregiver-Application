@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Monitor Client</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Generate or get a unique identifier
+    function getOrCreateUserId() {
+      let userId = localStorage.getItem('userId');
+      if (!userId) {
+        userId = 'user-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+        localStorage.setItem('userId', userId);
+      }
+      return userId;
+    }
+  </script>
+</head>
+<body>
+  <h1>Monitor Client</h1>
+  <img id="avatar" src="" alt="Avatar">
+  <p id="caption"></p>
+  <button id="goButton">Go</button>
+  <ul id="messagesList"></ul>
+  <script>
+    const socket = io();
+    const userId = getOrCreateUserId();
+
+    socket.on('connect', () => {
+      // Register as monitor
+      socket.emit('register', 'monitor', { userId });
+    });
+
+    socket.on('init', (data) => {
+      console.log('Initial data:', data);  // Log initial data
+      if (data.avatar) {
+        document.getElementById('avatar').src = `/${data.avatar}`;
+      }
+      document.getElementById('caption').innerText = data.caption;
+    });
+
+    document.getElementById('goButton').addEventListener('click', () => {
+      socket.emit('go');
+    });
+
+    socket.on('go', () => {
+      window.location.href = '/nextPage.html';
+    });
+  </script>
+</body>
+</html>

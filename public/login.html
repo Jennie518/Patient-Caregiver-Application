@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Generate or get a unique identifier
+    function getOrCreateUserId() {
+      let userId = localStorage.getItem('userId');
+      if (!userId) {
+        userId = 'user-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+        localStorage.setItem('userId', userId);
+      }
+      return userId;
+    }
+  </script>
+</head>
+<body>
+  <h1>Login</h1>
+  <form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" name="avatar" id="avatar" required>
+    <input type="text" name="caption" id="caption" placeholder="Enter caption" required>
+    <input type="text" name="userType" id="userType" placeholder="Enter user type (user/monitor)" required>
+    <button type="submit">Upload</button>
+  </form>
+  <ul id="messagesList"></ul>
+
+  <script>
+    const socket = io();
+    const userId = getOrCreateUserId();
+
+    document.getElementById('uploadForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const formData = new FormData(document.getElementById('uploadForm'));
+      fetch('/upload', {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log('Upload response:', data);  // Log JSON response
+        if (data.file) {
+          const userType = document.getElementById('userType').value;
+          socket.emit('register', userType, {
+            userId: userId,
+            avatar: data.file,
+            caption: document.getElementById('caption').value
+          });
+          if (userType === 'user') {
+            window.location.href = '/patient.html';
+          } else if (userType === 'monitor') {
+            window.location.href = '/monitor.html';
+          }
+        } else {
+          alert(data.msg);
+        }
+      })
+      .catch(error => console.error('Error:', error));
+    });
+  </script>
+</body>
+</html>
